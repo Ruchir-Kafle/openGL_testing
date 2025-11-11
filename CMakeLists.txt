@@ -24,6 +24,12 @@ set_target_properties(glfw PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/libs/glfw/include
 )
 
+# ---- Add GLM (header-only) ----
+add_library(glm INTERFACE)
+target_include_directories(glm INTERFACE
+    ${CMAKE_SOURCE_DIR}/libs/glm
+)
+
 # ---- Add your source files ----
 add_executable(my_app
     src/main.cpp
@@ -38,6 +44,7 @@ target_include_directories(my_app PRIVATE
 target_link_libraries(my_app
     glad
     glfw
+    glm
 )
 
 # ---- Windows system libs ----
