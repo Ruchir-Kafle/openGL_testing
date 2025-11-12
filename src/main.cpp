@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../libs/shaders/shaders.h"
+#include "cube.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -21,55 +22,13 @@ int main() {
         return -1;
     }
 
+
+    Cube myCube(glm::vec3(0.0f, 0.0f, -2.0f));
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
-
-    GLfloat vertices[] = {
-        // positions           // colors (R, G, B)
-        // Front face
-        -0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 0.0f, // 0 bottom-left
-        0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 0.0f, // 1 bottom-right
-        0.5f,  0.5f,  0.5f,   1.0f, 0.0f, 0.0f, // 2 top-right
-        -0.5f,  0.5f,  0.5f,   1.0f, 0.0f, 0.0f, // 3 top-left
-
-        // Back face
-        -0.5f, -0.5f, -0.5f,   1.0f, 0.0f, 0.0f, // 4 bottom-left
-        0.5f, -0.5f, -0.5f,   1.0f, 0.0f, 0.0f, // 5 bottom-right
-        0.5f,  0.5f, -0.5f,   1.0f, 0.0f, 0.0f, // 6 top-right
-        -0.5f,  0.5f, -0.5f,   1.0f, 0.0f, 0.0f  // 7 top-left
-    };
-
-    GLuint indices[] = {
-        // Front face
-        0, 1, 2,
-        2, 3, 0,
-
-        // Back face
-        5, 4, 7,
-        7, 6, 5,
-
-        // Left face
-        4, 0, 3,
-        3, 7, 4,
-
-        // Right face
-        1, 5, 6,
-        6, 2, 1,
-
-        // Top face
-        3, 2, 6,
-        6, 7, 3,
-
-        // Bottom face
-        4, 5, 1,
-        1, 0, 4
-    };
-
-
-
 
     GLFWwindow* window = glfwCreateWindow(width, height, "Testing", NULL, NULL);
     if (!window) {
@@ -95,8 +54,8 @@ int main() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     
     // Setting the data the buffers will store.
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(myCube.vertices), myCube.finalVertices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(myCube.indices), myCube.indices, GL_STATIC_DRAW);
 
     // Inputs into the vertex shader
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
@@ -123,7 +82,7 @@ int main() {
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 proj = glm::mat4(1.0f);
 
-        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f)); 
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.5f, 1.0f, 0.0f)); 
         view = glm::translate(view, glm::vec3(0.0f, 0.0f, -2.0f));
         proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
@@ -135,7 +94,7 @@ int main() {
         glUniformMatrix4fv(projLocation, 1, GL_FALSE, glm::value_ptr(proj));
 
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, sizeof(myCube.indices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         

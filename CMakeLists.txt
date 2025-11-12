@@ -33,6 +33,7 @@ target_include_directories(glm INTERFACE
 # ---- Add your source files ----
 add_executable(my_app
     src/main.cpp
+    src/cube.cpp
     libs/shaders/shaders.cpp
 )
 
