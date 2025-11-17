@@ -16,5 +16,5 @@ class Cube {
         static const GLuint indices[3 * 12];
         GLfloat finalVertices[8 * 6];
 
-        Cube(const glm::vec3 position);
+        // Cube(const glm::vec3 position);
 };

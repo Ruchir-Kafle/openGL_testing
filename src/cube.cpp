@@ -42,37 +42,3 @@ const GLuint Cube::indices[3*12] = {
     1, 0, 4
 };
 
-
-Cube::Cube(const glm::vec3 position) {
-    
-    int j = 0;
-    for (int i = 0; i < sizeof(vertices) / sizeof(GLfloat); i++) {
-        
-        int axis = 0;
-
-        if (j == 0) {
-            axis = position.x;
-        } else if (j == 1) {
-            axis = position.y;
-        } else if (j == 2) {
-            axis = position.z;
-        } else {
-
-            if (j == 5) {
-                j = 0;
-            } else {
-                j++;
-            }
-
-
-            this->finalVertices[i] = vertices[i];
-
-            continue;
-        };
-
-        j++;
-
-        this->finalVertices[i] = vertices[i] + 1 * axis;
-    }
-
-}
