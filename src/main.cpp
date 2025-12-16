@@ -1,6 +1,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <random>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -8,12 +9,13 @@
 
 #include "../libs/shaders/shaders.h"
 #include "cube.h"
+#include "perlinNoise.h"
 
-int width = 1280;
-int height = 1280;
+int windowWidth = 1280;
+int windowHeight = 1280;
 
-float lastMouseX = width / 2;
-float lastMouseY = height / 2;  
+float lastMouseX = windowWidth / 2;
+float lastMouseY = windowHeight / 2;  
 
 // Camera settings    
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 10.0f);
@@ -26,9 +28,12 @@ const int cameraSpeed = 10;
 double yaw = -90;
 double pitch = 0;
 
+float FOV = 75.0f;
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
+    windowWidth = width;
+    windowHeight = height;
     glViewport(0, 0, width, height);
 }
 
@@ -84,7 +89,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-    GLFWwindow* window = glfwCreateWindow(width, height, "Testing", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "Testing", NULL, NULL);
     if (!window) {
         std::cerr << "Failed to create GLFW window\n";
         glfwTerminate();
@@ -133,6 +138,18 @@ int main() {
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
+    int outputSize = 128;
+    float *noiseSeed = new float[outputSize * outputSize];
+    int octaveCount = 1;
+    float *finalNoise = new float[outputSize * outputSize];
+    for (int i = 0; i < outputSize * outputSize; i++) noiseSeed[i] = (float)rand() / (float)RAND_MAX;
+    
+    PerlinNoise::PerlinNoise2D(outputSize, outputSize, noiseSeed, octaveCount, finalNoise);
+
+    // std::cout << sizeof(finalNoise) << std::endl;
+
+    bool firstPress[2] = {false, false};
+
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -145,7 +162,6 @@ int main() {
         
         // Calculating camera speed using delta time so user speed doesn't depend on framerate
         GLfloat deltaTimeSpeed = cameraSpeed * deltaTime;
-
 
         // Camera movement: user interactivity
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -166,6 +182,28 @@ int main() {
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
             cameraPos -= cameraUp * deltaTimeSpeed;
         }
+        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+            if (!firstPress[0]) {
+                firstPress[0] = true;
+                octaveCount++;
+                if (octaveCount > 8) octaveCount = 1;
+                PerlinNoise::PerlinNoise2D(outputSize, outputSize, noiseSeed, octaveCount, finalNoise);
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+            if (!firstPress[1]) {
+                firstPress[1] = true;
+                for (int i = 0; i < outputSize * outputSize; i++) noiseSeed[i] = (float)rand() / (float)RAND_MAX;
+                PerlinNoise::PerlinNoise2D(outputSize, outputSize, noiseSeed, octaveCount, finalNoise);
+            }
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE) {
+            firstPress[0] = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_RELEASE) {
+            firstPress[1] = false;
+        }
 
         // Set window close
         if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
@@ -177,7 +215,7 @@ int main() {
         glm::mat4 proj = glm::mat4(1.0f);
 
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);  
-        proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+        proj = glm::perspective(glm::radians(FOV), (float)windowWidth / (float)windowHeight, 0.1f, 200.0f);
 
         int viewLocation = glGetUniformLocation(shaderProgram.ID, "view");
         glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(view));
@@ -186,14 +224,11 @@ int main() {
 
         glBindVertexArray(VAO);
         
-        int cubeCount = 10;
-        for (int i = 0; i < cubeCount; i++) {
-            for (int j = 0; j < cubeCount; j++) {
+        for (int x = 0; x < outputSize; x++) {
+            for (int z = 0; z < outputSize; z++) {
                 model = glm::mat4(1.0f);
-                model = glm::translate(model, glm::vec3(i, 0, j));
-
-                // int colorLocation = glGetUniformLocation(shaderProgram.ID, "aColor");
-                // glUniform3fv(colorLocation, 1, myCubes[i].color.data());
+                model = glm::translate(model, glm::vec3(x, (int)(finalNoise[z * outputSize + x] * 60.0f), z));
+                // std::cout << finalNoise[i] << std::endl;
 
                 int modelLocation = glGetUniformLocation(shaderProgram.ID, "model");
                 glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));

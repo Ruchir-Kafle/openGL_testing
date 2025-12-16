@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---- Debug settings ----
-# Enable full debug info and disable optimizations for GDB
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
@@ -34,10 +33,13 @@ target_include_directories(glm INTERFACE
 add_executable(my_app
     src/main.cpp
     src/cube.cpp
+    src/perlinNoise.cpp
     libs/shaders/shaders.cpp
 )
 
+# ---- Include paths for your app ----
 target_include_directories(my_app PRIVATE
+    src                          
     libs/shaders
 )
 
