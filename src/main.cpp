@@ -11,6 +11,10 @@
 #include "cube.h"
 #include "perlinNoise.h"
 
+// Credits:
+// https://learnopengl.com/Advanced-OpenGL/Instancing
+// https://www.youtube.com/watch?v=45MIykWJ-C4&t=5989s
+
 int windowWidth = 1280;
 int windowHeight = 1280;
 
