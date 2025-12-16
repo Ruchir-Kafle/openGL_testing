@@ -4,30 +4,80 @@
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
 #include "../libs/shaders/shaders.h"
 #include "cube.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+int width = 1280;
+int height = 1280;
+
+float lastMouseX = width / 2;
+float lastMouseY = height / 2;  
+
+// Camera settings    
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 10.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+const float cameraSensitivity = 0.1f;
+const int cameraSpeed = 10;
+
+double yaw = -90;
+double pitch = 0;
+
+
+void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
 
-int main() {
-    int width = 1280;
-    int height = 1280;
+void mousePosCallback(GLFWwindow* window, double mouseX, double mouseY) {
+    float deltaX = mouseX - lastMouseX;
+    float deltaY = mouseY - lastMouseY;
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
 
+    deltaX *= cameraSensitivity;
+    deltaY *= cameraSensitivity;
+
+    yaw += deltaX;
+    pitch += deltaY;
+
+    if (pitch > 90.0f) {
+        pitch = 90.0f;
+    } else if (pitch < -90.0f) {
+        pitch = -90.0f;
+    }
+
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = -sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+
+}
+
+int main() {
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW\n";
         return -1;
     }
 
+    Cube myCube({1.0f, 0.0f, 0.0f});
+    Cube secondCube({0.0f, 0.0f, 1.0f});
+    Cube thirdCube({0.0f, 1.0f, 0.0f});
+    Cube fourthCube({1.0f, 1.0f, 1.0f});
+    Cube fifthCube({1.0f, 1.0f, 1.0f});
+    Cube myCubes[5] = {myCube, secondCube, thirdCube, fourthCube, fifthCube};
 
-    Cube myCube{};
-    Cube secondCube{};
-    Cube myCubes[2] = {};
-    myCubes[0] = myCube;
-    myCubes[1] = secondCube;
+    int amountOfCubes = sizeof(myCubes)/sizeof(Cube);
+
+    // std::vector<float> colors[sizeof(myCubes)/sizeof(Cube)] = {};
+
+    // for (int i = 0; i < amountOfCubes; i++) {
+    //     colors[i] = myCubes[i].color;
+    // }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -41,8 +91,12 @@ int main() {
         return -1;
     }
 
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwMakeContextCurrent(window);
+
+    // Mouse
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mousePosCallback);
 
     gladLoadGL();
 
@@ -64,31 +118,65 @@ int main() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(myCube.indices), myCube.indices, GL_STATIC_DRAW);
 
     // Inputs into the vertex shader
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
 
     // Unbinding buffers
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     Shader shaderProgram("../libs/shaders/vertexShader.vert", "../libs/shaders/fragmentShader.frag");
 
     glEnable(GL_DEPTH_TEST);
 
+    // Delta time for consistency in speed/actions
+    float deltaTime = 0.0f;
+    float lastFrame = 0.0f;
+
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         shaderProgram.activateShader();
+
+        // Calculating delta time
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+        
+        // Calculating camera speed using delta time so user speed doesn't depend on framerate
+        GLfloat deltaTimeSpeed = cameraSpeed * deltaTime;
+
+
+        // Camera movement: user interactivity
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            cameraPos += cameraFront * deltaTimeSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            cameraPos -= cameraFront * deltaTimeSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaTimeSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaTimeSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            cameraPos += cameraUp * deltaTimeSpeed;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            cameraPos -= cameraUp * deltaTimeSpeed;
+        }
+
+        // Set window close
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, true);
+        }
 
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 proj = glm::mat4(1.0f);
 
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -7.0f));
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);  
         proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
         int viewLocation = glGetUniformLocation(shaderProgram.ID, "view");
@@ -98,11 +186,15 @@ int main() {
 
         glBindVertexArray(VAO);
         
-        for (int i = 0; i < sizeof(myCubes) / sizeof(myCube); i++) {
-            for (int j = 0; j < sizeof(myCubes) / sizeof(myCube); j++) {
-                std::cout << i << j << std::endl;
-                model = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.5f, 1.0f, 0.0f)); 
-                model = glm::translate(model, glm::vec3(i, 0, j)); 
+        int cubeCount = 10;
+        for (int i = 0; i < cubeCount; i++) {
+            for (int j = 0; j < cubeCount; j++) {
+                model = glm::mat4(1.0f);
+                model = glm::translate(model, glm::vec3(i, 0, j));
+
+                // int colorLocation = glGetUniformLocation(shaderProgram.ID, "aColor");
+                // glUniform3fv(colorLocation, 1, myCubes[i].color.data());
+
                 int modelLocation = glGetUniformLocation(shaderProgram.ID, "model");
                 glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
                 

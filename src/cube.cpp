@@ -1,18 +1,18 @@
 #include "cube.h"
 
-const GLfloat Cube::vertices[8*6] = {
-    // positions           // colors (R, G, B)
+const GLfloat Cube::vertices[8*3] = {
+    // positions
     // Front face
-    -0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 0.0f, // 0 bottom-left
-    0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 0.0f, // 1 bottom-right
-    0.5f,  0.5f,  0.5f,   1.0f, 0.0f, 0.0f, // 2 top-right
-    -0.5f,  0.5f,  0.5f,   1.0f, 0.0f, 0.0f, // 3 top-left
+    -0.5f, -0.5f,  0.5f,
+    0.5f, -0.5f,  0.5f,
+    0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
 
     // Back face
-    -0.5f, -0.5f, -0.5f,   1.0f, 0.0f, 0.0f, // 4 bottom-left
-    0.5f, -0.5f, -0.5f,   1.0f, 0.0f, 0.0f, // 5 bottom-right
-    0.5f,  0.5f, -0.5f,   1.0f, 0.0f, 0.0f, // 6 top-right
-    -0.5f,  0.5f, -0.5f,   1.0f, 0.0f, 0.0f  // 7 top-left
+    -0.5f, -0.5f, -0.5f,
+    0.5f, -0.5f, -0.5f,
+    0.5f,  0.5f, -0.5f,
+    -0.5f,  0.5f, -0.5f
 };
 
 
@@ -42,3 +42,23 @@ const GLuint Cube::indices[3*12] = {
     1, 0, 4
 };
 
+// Cube::Cube(const glm::vec3 color) {
+//     this->color = color;
+//     this->finalVertices;
+    
+//     for (int i = 0; i < sizeof(this->vertices) / sizeof(GLfloat); i+=3) {
+
+//         this->finalVertices[i*2] = this->vertices[i];
+//         this->finalVertices[i*2+1] = this->vertices[i+1];
+//         this->finalVertices[i*2+2] = this->vertices[i+2];
+
+//         this->finalVertices[i*2+3] = this->color.x;
+//         this->finalVertices[i*2+4] = this->color.y;
+//         this->finalVertices[i*2+5] = this->color.z;
+
+//     }
+// }
+
+Cube::Cube(const std::vector<float> color) {
+    this->color = color;
+}

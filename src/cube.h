@@ -8,13 +8,16 @@
 #include <cerrno>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
 
 class Cube {
     public:
-        static const GLfloat vertices[8 * 6];
+        static const GLfloat vertices[8 * 3];
         static const GLuint indices[3 * 12];
+
+        std::vector<float> color;
         GLfloat finalVertices[8 * 6];
 
-        // Cube(const glm::vec3 position);
+        Cube(const std::vector<float> color);
 };
